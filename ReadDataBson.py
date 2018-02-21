@@ -1,3 +1,5 @@
+__author__ = 'Abdul Rubaye'
+
 from pymongo import MongoClient
 import pprint
 import urllib2
@@ -16,21 +18,25 @@ events = database.events
 users = database.users
 repo = database.repos
 
+# client id and client secret are used in calling the github API
+# they will help to raise the maximum limit of calls per hour
+file=open("privateVar.txt",'r').read()
+client_id = file.split('\n', 1)[0]
+client_secret = file.split('\n', 1)[1]
+
+
 def print_first_elem(collection):
     for elem in collection.find():
           pprint.pprint(elem)
           break
     print collection.count()
 
-def print_in_range(collection, range):
-    index = 0
-    for elem in collection.find():
-          pprint.pprint(elem)
-          if index == range:
-            break
-          else:
-              print_separator()
-              index += 1
+def print_in_range(collection, offset, position):
+    for elem in collection.find()[offset:position]:
+          # pprint.pprint(elem)
+          print elem['watchers_count']
+          print_separator()
+
 
 def print_with_condition(collection, field, value):
     for elem in collection.find():
@@ -39,13 +45,6 @@ def print_with_condition(collection, field, value):
 
 def print_separator():
     print ('---------------------------------------------------------------------------')
-
-# reading from a url
-def read_url(url) :
-    response = urllib2.urlopen(url)
-    data = simplejson.load(response)
-    pprint.pprint(data[1])
-    pprint.pprint(data[1]["login"])
 
 # fetches the followers of a user from a url and create a list
 def actor_followers_list(url):
@@ -69,8 +68,7 @@ def read_actor_login(url):
         return 'null'
 
 
-
-def events_repo_users():
+def create_database():
 
     actor = ''
     repo = ''
@@ -86,16 +84,5 @@ def events_repo_users():
         print repo,' - ', event_type, ' - ', actor, ' - ' , followers
 
 
-# url = "https://api.github.com/users/hackernix/followers"
-# read_url(url)
 
-
-# print_first_elem(events)
-# print_separator()
-# print_first_elem(users)
-# print_with_condition(users,'login','davidlewallen')
-
-# events_repo_users()
-print_first_elem(events)
-
-print_first_elem(repo)
+print client_secret
