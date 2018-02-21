@@ -78,7 +78,7 @@ def add_client_id_client_secret_to_url(url):
     return url+'?client_id='+client_id+'&client_secret='+client_secret
 
 
-# to create a sparate database out of the downloaded github bson file only for our work
+# to create a separate database out of the downloaded github bson file only for our work
 def create_database():
     for event in events.find():
         repo = event['repo']['name'].split('/')[1]
