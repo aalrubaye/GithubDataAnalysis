@@ -15,6 +15,7 @@ import os
 client = MongoClient()
 database = client.github_16
 events = database.events
+events_forks = database.events_forks
 
 # client id and client secret are used in calling the github API
 # they will help to raise the maximum limit of calls per hour
@@ -84,8 +85,11 @@ def create_database():
         print repo,' - ', event_type, ' - ', actor, ' - ' , followers
 
 
-index = 1
-for elem in events.find():
-  if elem['type'] == 'ForkEvent':
-    index += 1
-    print index
+# index = 1
+# for elem in events.find():
+#   if elem['type'] == 'ForkEvent':
+#     index += 1
+#     print index
+
+
+
