@@ -47,31 +47,27 @@ def print_with_condition(field, value):
 def print_separator():
     print ('-'*100)
 
-
-# fetches the followers of a user from a url and create a list
-def actor_followers_list(url):
+# fetches the user object from a url and calls the followers list creator
+def fetch_actor_followers(url):
     followers_list = []
     new_url = add_client_id_client_secret_to_url(url)
     try:
         response = urllib2.urlopen(new_url)
         data = simplejson.load(response)
-        for actor in data:
-            followers_list.append(actor['login'])
+        for follower in data:
+            followers_list.append(follower['login'])
         return followers_list
     except urllib2.URLError, e:
-        return 'null'
+        return None
 
-
-# fetches the user object from a url and calls the followers list creator
-def read_actor_login(url):
+def fetch_repo_information(url):
     new_url = add_client_id_client_secret_to_url(url)
     try:
         response = urllib2.urlopen(new_url)
         data = simplejson.load(response)
-        return actor_followers_list(data['followers_url'])
+        return data
     except urllib2.URLError, e:
-        return 'null'
-
+        return None
 
 # appends the client id and the client secret to urls
 def add_client_id_client_secret_to_url(url):
@@ -79,17 +75,35 @@ def add_client_id_client_secret_to_url(url):
 
 
 # to create a separate database out of the downloaded github bson file only for our work
-def create_database():
-    for event in events.find():
-        repo = event['repo']['name'].split('/')[1]
-        event_type = event['type']
-        actor = event['actor']['login']
-        followers = read_actor_login(event['actor']['url'])
-        print repo,' - ', event_type, ' - ', actor, ' - ' , followers
+def create_database_from_forks_events():
+    for event in events_forks.find():
+        repo = fetch_repo_information(event['repo']['url'])
+        followers_list = fetch_actor_followers(event['payload']['forkee']['owner']['followers_url'])
+        if (repo is not None) & (followers_list is not None):
+            entry = {
+                "id": event['id'],
+                "created_at": event['created_at'],
+                "actor": event['actor']['login'],
+                "followers": followers_list,
+                "repo_name": repo['name'],
+                "repo_created_at": repo['created_at'],
+                "repo_language": repo['language'],
+                "repo_size": repo['size'],
+                "repo_stargazers": repo['stargazers_count'],
+                "repo_watchers": repo['watchers_count'],
+                "repo_forks_count": repo['forks_count'],
+                "repo_network_count": repo['network_count'],
+                "repo_subscribers_count": repo['subscribers_count'],
+                "followers_url": event['payload']['forkee']['owner']['followers_url'],
+                "repo_url": event['repo']['url']
+            }
+            pprint.pprint(entry)
+        break
+
 
 
 # separate ForkEvents and insert them in a collection
-def feed_collection():
+def feed_events_forks_collection():
     index = 1
     for elem in events.find():
         if elem['type'] == 'ForkEvent':
@@ -100,5 +114,14 @@ def feed_collection():
 
 # below is the area where I call the functions
 
-feed_collection()
+# 1 - we need to separate the forks events for more convenient
+# feed_events_forks_collection()
 
+# 2- create a mongodb collection for the elements we want
+create_database_from_forks_events()
+
+
+# for elem in events_forks.find():
+#     pprint.pprint(elem['payload']['forkee']['owner']['followers_url'])
+#     break
+# print events_forks.count()
