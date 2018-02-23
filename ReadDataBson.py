@@ -4,6 +4,8 @@ from pymongo import MongoClient
 import pprint
 import urllib2
 import simplejson
+from datetime import datetime, timedelta
+import time
 
 # list of any database collections
 # ["commit_comments", "commits", "events", "followers", "forks", "geo_cache", "issue_comments", "issue_events",
@@ -14,6 +16,7 @@ client = MongoClient()
 database = client.github_16
 events = database.events
 events_forks = database.events_forks
+final_collection = database.final_collection
 
 # client id and client secret are used in calling the github API
 # they will help to raise the maximum limit of calls per hour
@@ -73,10 +76,19 @@ def fetch_repo_information(url):
 def add_client_id_client_secret_to_url(url):
     return url+'?client_id='+client_id+'&client_secret='+client_secret
 
+# separate ForkEvents and insert them in a collection
+def feed_events_forks_collection():
+    index = 1
+    for elem in events.find():
+        if elem['type'] == 'ForkEvent':
+            events_forks.insert(elem)
+            index = index + 1
+            print index
 
 # to create a separate database out of the downloaded github bson file only for our work
-def create_database_from_forks_events():
-    for event in events_forks.find():
+def create_database_from_forks_events(offset,position):
+    index = offset
+    for event in events_forks.find()[offset:position]:
         repo = fetch_repo_information(event['repo']['url'])
         followers_list = fetch_actor_followers(event['payload']['forkee']['owner']['followers_url'])
         if (repo is not None) & (followers_list is not None):
@@ -97,19 +109,9 @@ def create_database_from_forks_events():
                 "followers_url": event['payload']['forkee']['owner']['followers_url'],
                 "repo_url": event['repo']['url']
             }
-            pprint.pprint(entry)
-        break
-
-
-
-# separate ForkEvents and insert them in a collection
-def feed_events_forks_collection():
-    index = 1
-    for elem in events.find():
-        if elem['type'] == 'ForkEvent':
-            events_forks.insert(elem)
-            index += 1
-            print index
+            final_collection.insert(entry)
+        index += 1
+        print index
 
 
 # below is the area where I call the functions
@@ -118,10 +120,42 @@ def feed_events_forks_collection():
 # feed_events_forks_collection()
 
 # 2- create a mongodb collection for the elements we want
-create_database_from_forks_events()
+# create_database_from_forks_events(13200,15600)
+#
+# for e in final_collection.find():
+#     pprint.pprint(e)
+
+# for e in events_forks.find()[3599:3600]:
+#     pprint.pprint(e)
+# print final_collection.count()
 
 
-# for elem in events_forks.find():
-#     pprint.pprint(elem['payload']['forkee']['owner']['followers_url'])
-#     break
-# print events_forks.count()
+# todo
+# 37280-39680
+# 39680-42080
+# 42080-44480
+# 44480-45992
+
+offset = 37280
+ii = 0
+while ii < 4:
+    position = offset+2400
+    print datetime.now()
+
+    dt = datetime.now() + timedelta(hours=1)
+
+    # 2- create a mongodb collection for the elements we want
+    create_database_from_forks_events(offset, position)
+
+
+    # dt = dt.replace(minute=10)
+    #
+    while datetime.now() < dt:
+        time.sleep(1)
+
+    offset = position
+    ii += 1
+
+
+
+# print final_collection.count()
