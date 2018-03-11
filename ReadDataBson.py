@@ -1,11 +1,13 @@
-__author__ = 'Abdul Rubaye'
-
 from pymongo import MongoClient
 import pprint
 import urllib2
 import simplejson
 from datetime import datetime, timedelta
 import time
+
+
+__author__ = 'Abdul Rubaye'
+
 
 # list of any database collections
 # ["commit_comments", "commits", "events", "followers", "forks", "geo_cache", "issue_comments", "issue_events",
@@ -85,6 +87,7 @@ def feed_events_forks_collection():
             index = index + 1
             print index
 
+
 # to create a separate database out of the downloaded github bson file only for our work
 def create_database_from_forks_events(offset,position):
     index = offset
@@ -124,17 +127,6 @@ def create_database_from_forks_events(offset,position):
 #
 # for e in final_collection.find():
 #     pprint.pprint(e)
-
-# for e in events_forks.find()[3599:3600]:
-#     pprint.pprint(e)
-# print final_collection.count()
-
-
-# todo
-# 37280-39680
-# 39680-42080
-# 42080-44480
-# 44480-45992
 
 offset = 37280
 ii = 0
