@@ -10,24 +10,26 @@ __author__ = 'Abdul Rubaye'
 
 # The main class of generated the model
 class ModelGenerator:
-
     # create a network instance
     graph = nx.Graph()
     # number of the times we aim to generate extra models
     models_number = 2
-    limit = 100
+    limit = 5000
     is_random = True
     time = 0
     forks = []
     repos = []
+    lang_list = ['JavaScript','Java','Python','C++','HTML','PHP','Ruby','C','C#','Go','CSS','Shell',
+                 'Jupyter Notebook','TypeScript', 'Objective-C', 'Swift','R','Vue','Kotlin','Scala',
+                 'Matlab','TeX','Groovy','PowerShell','Lua','Rust','Makefile','Haskell','Perl','Elixir','CoffeeScript','Vim script']
 
     def __init__(self):
         # connects to the db
         self.final_collection = MongoConnection.connect()
+
         # True = random
         # False = Prob_random
-        self.generate_graph(False)
-
+        self.generate_graph(True)
 
     # Prepares and adds a node + attributes to the graph
     def add_node(self, entry, label, node_type):
@@ -139,9 +141,6 @@ class ModelGenerator:
                     index_of_rand, rand = self.weight_random_pick(prob, index_list)
                 else:
                     index_of_rand, rand = self.random_pick(index_list)
-                # print prob
-                # print index_list
-                # print rand
 
                 follower_to_connect = followers[rand].pop()
                 self.graph.add_edge(repos[rand], follower_to_connect)
@@ -149,9 +148,8 @@ class ModelGenerator:
                 self.graph.node[follower_to_connect]['node_type'] = self.node_type('Actor')
                 forks[rand] += 1
                 if len(followers[rand]) == 0:
-                    # print ('done')
+
                     index_list.pop(index_of_rand)
-                # print ('-'*100)
                 print i
 
             # export graph as a graphml file
@@ -171,18 +169,17 @@ class ModelGenerator:
                 prob.append(float(forks[j])/float(cumulative_forks_count))
         return prob
 
-    # Picks a random number
+    # Picks a weighted random number
     def weight_random_pick(self, prob_list, index_list):
         rand = np.random.choice(len(prob_list), 1, p=prob_list)[0]
-        # while rand not in index_list:
-        #     rand = np.random.choice(len(prob_list), 1, p=prob_list)[0]
         return rand, index_list[rand]
 
-
+    # Picks a random number
     def random_pick(self, index_list):
         rand = np.random.randint(len(index_list), size=1)[0]
         return rand, index_list[rand]
 
+    # Returns node types
     def node_type(self, t):
         switcher = {
             'Repo': 3,
@@ -191,10 +188,16 @@ class ModelGenerator:
         }
         return switcher.get(t, 1)
 
+    # Checks to see if a language is among those top 20% languages
+    def is_lang(self, lang):
+        if lang in self.lang_list:
+            return True
+        else:
+            return False
+
     # Extracts the correspondent index of a language
     def language(self, lang):
         switcher = {
-            None: 0,
             'JavaScript': 1,
             'Java': 2,
             'Python': 3,
@@ -215,9 +218,20 @@ class ModelGenerator:
             'Vue': 18,
             'Kotlin': 19,
             'Scala': 20,
-            'Other':21
+            'Matlab': 21,
+            'TeX': 22,
+            'Groovy': 23,
+            'PowerShell': 24,
+            'Lua': 25,
+            'Rust': 26,
+            'Makefile': 27,
+            'Haskell': 28,
+            'Perl': 29,
+            'Elixir': 30,
+            'CoffeeScript': 31,
+            'Vim script': 32
         }
-        return switcher.get(lang, 21)
+        return switcher.get(lang, 33)
 
     # returns the model name for exporting graph file purposes
     def model_name(self, random, time):
@@ -225,6 +239,7 @@ class ModelGenerator:
             return "random_model_t"+str(time)
         else:
             return "prob_model_t"+str(time)
+
 
 if __name__ == "__main__":
     ModelGenerator()
