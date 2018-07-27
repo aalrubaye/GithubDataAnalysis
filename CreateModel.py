@@ -1,9 +1,7 @@
-import random
-
 import MongoConnection
 import networkx as nx
 import numpy as np
-from enum import Enum
+
 
 __author__ = 'Abdul Rubaye'
 
@@ -13,8 +11,8 @@ class ModelGenerator:
     # create a network instance
     graph = nx.Graph()
     # number of the times we aim to generate extra models
-    models_number = 2
-    limit = 5000
+    models_number = 3
+    limit = 1000
     is_random = True
     time = 0
     forks = []
@@ -29,7 +27,17 @@ class ModelGenerator:
 
         # True = random
         # False = Prob_random
-        self.generate_graph(True)
+        # self.generate_graph(False)
+        self.graph.add_node('r', node_type=3)
+        self.graph.add_node('r1', node_type=3)
+        self.graph.add_node('a',node_type=2)
+        self.graph.add_node('f1', node_type=1)
+        self.graph.add_node('f2', node_type=1)
+        self.graph.add_edge('r','a')
+        self.graph.add_edge('r1','a')
+        self.graph.add_edge('a', 'f1')
+        self.graph.add_edge('a', 'f2')
+        nx.write_graphml(self.graph, "/Users/Abduljaleel/Desktop/hh4.graphml")
 
     # Prepares and adds a node + attributes to the graph
     def add_node(self, entry, label, node_type):
@@ -57,6 +65,10 @@ class ModelGenerator:
     def generate_graph(self, rnd):
         self.is_random = rnd
 
+        print ('-'*100)
+        print ('Repo-Actors')
+        print ('-'*100)
+
         index = 0
 
         for entry in self.final_collection.find():
@@ -80,6 +92,10 @@ class ModelGenerator:
 
     # If a user forked more than a repo, this def will connects them
     def repo_repo(self):
+        print ('-'*100)
+        print ('Repos-Repos')
+        print ('-'*100)
+
         for node in self.graph.degree:
             if node[1] > 1:
                 rp_to_be_connected = []
@@ -95,7 +111,10 @@ class ModelGenerator:
 
     # Connects the followers to users
     def follower_actor(self):
-        print ('Followers')
+        print ('-'*100)
+        print ('Followers-actors')
+        print ('-'*100)
+
         followers = []
         index = 0
         for entry in self.final_collection.find():
@@ -120,6 +139,7 @@ class ModelGenerator:
 
     # Adds edges to the graph based on different probabilities
     def add_edges_to_graph(self, forks_list, followers, repos_list, time):
+
         if self.models_number > 0:
             print('-'*100)
             print('Generating the model at time t'+str(time))
@@ -136,21 +156,24 @@ class ModelGenerator:
                     index_list.append(i)
 
             for i in range(len(forks)):
-                if self.is_random is False:
-                    prob = self.compute_probabilities(forks, index_list)
-                    index_of_rand, rand = self.weight_random_pick(prob, index_list)
-                else:
-                    index_of_rand, rand = self.random_pick(index_list)
+                try:
+                    if self.is_random is False:
+                        prob = self.compute_probabilities(forks, index_list)
+                        index_of_rand, rand = self.weight_random_pick(prob, index_list)
+                    else:
+                        index_of_rand, rand = self.random_pick(index_list)
 
-                follower_to_connect = followers[rand].pop()
-                self.graph.add_edge(repos[rand], follower_to_connect)
-                self.graph.node[repos[rand]]['repo_forks_count'] += 1
-                self.graph.node[follower_to_connect]['node_type'] = self.node_type('Actor')
-                forks[rand] += 1
-                if len(followers[rand]) == 0:
+                    follower_to_connect = followers[rand].pop()
+                    self.graph.add_edge(repos[rand], follower_to_connect)
+                    self.graph.node[repos[rand]]['repo_forks_count'] += 1
+                    self.graph.node[follower_to_connect]['node_type'] = self.node_type('Actor')
+                    forks[rand] += 1
+                    if len(followers[rand]) == 0:
+                        index_list.pop(index_of_rand)
+                    print i
+                except:
+                    print ('ERRRORRRRR!!')
 
-                    index_list.pop(index_of_rand)
-                print i
 
             # export graph as a graphml file
             nx.write_graphml(self.graph, "/Users/Abduljaleel/Desktop/"+self.model_name(self.is_random, time)+".graphml")

@@ -5,6 +5,7 @@ import simplejson
 from datetime import datetime, timedelta
 import time
 
+import xlwt
 
 __author__ = 'Abdul Rubaye'
 
@@ -117,7 +118,6 @@ def create_database_from_forks_events(offset,position):
         print index
 
 
-# below is the area where I call the functions
 
 # 1 - we need to separate the forks events for more convenient
 # feed_events_forks_collection()
@@ -128,28 +128,53 @@ def create_database_from_forks_events(offset,position):
 # for e in final_collection.find():
 #     pprint.pprint(e)
 
-offset = 37280
-ii = 0
-while ii < 4:
-    position = offset+2400
-    print datetime.now()
-
-    dt = datetime.now() + timedelta(hours=1)
-
-    # 2- create a mongodb collection for the elements we want
-    create_database_from_forks_events(offset, position)
-
-
-    # dt = dt.replace(minute=10)
-    #
-    while datetime.now() < dt:
-        time.sleep(1)
-
-    offset = position
-    ii += 1
-
-
+# offset = 37280
+# ii = 0
+# while ii < 4:
+#     position = offset+2400
+#     print datetime.now()
+#
+#     dt = datetime.now() + timedelta(hours=1)
+#
+#     # 2- create a mongodb collection for the elements we want
+#     create_database_from_forks_events(offset, position)
+#
+#
+#     # dt = dt.replace(minute=10)
+#     #
+#     while datetime.now() < dt:
+#         time.sleep(1)
+#
+#     offset = position
+#     ii += 1
 
 # print final_collection.count()
+#
+# index=0
+# str=[]
+# # print final_collection.count()
+# # for entry in final_collection.find():
+# #     str.append((entry['created_at'])[11:-7])
+# #     index += 1
+# #     print index
+# #
+# # print str
+#
+#
+# book = xlwt.Workbook(encoding="utf-8")
+# sheet1 = book.add_sheet("Sheet 1")
+# print final_collection.count()
+# for entry in final_collection.find():
+#     if entry['repo_language'] is not None:
+#         if entry['repo_language']=='Go':
+#             str.append(int((entry['created_at'])[11:-7]))
+#             # sheet1.write(index, 1, int((entry['created_at'])[11:-7]))
+#             index += 1
+#
+#             print index
+#
+# # book.save("trial2.csv")
+# print str
 
 
+print events.count()
